@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Irish Flashcards</title>
+<style>
+:root{--bg:#eaf0ee;--fg:#1c2622;--mut:#5f6c66;--card:#fff;--bd:#c9d4cf;--ac:#17694a;--acfg:#fff;--bad:#a63d2c;--tint:#dfe9e5;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#131b18;--fg:#e8eeeb;--mut:#92a19a;--card:#1d2723;--bd:#33423c;--ac:#52b88f;--acfg:#0b1812;--bad:#e5806d;--tint:#26332e;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top,0) 14px env(safe-area-inset-bottom,0)}
+main{max-width:640px;margin:0 auto;padding:14px 0 40px}
+h1{font:600 1.35rem/1.2 Georgia,"Times New Roman",serif;margin:6px 0 12px}
+nav{display:flex;gap:6px;margin-bottom:14px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 14px;cursor:pointer}
+a.btn{display:inline-block;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 14px;color:inherit;text-decoration:none}
+a.btn:hover,button:hover{border-color:var(--ac)}
+a.btn:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.card:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+button.on,button.pri{background:var(--ac);color:var(--acfg);border-color:var(--ac)}
+button.bad{color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stat{color:var(--mut);font-size:.9rem;margin:8px 0}
+.card{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:250px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:22px;cursor:pointer;user-select:none;transition:transform .15s}
+.card:active{transform:scale(.99)}
+.tag{color:var(--mut);font-size:.85rem;margin-bottom:10px}
+.big{font:600 2rem/1.25 Georgia,"Times New Roman",serif;overflow-wrap:anywhere}
+.big.multi{font-size:1.15rem;line-height:1.6;white-space:pre-line;text-align:left;font-weight:500}
+.pron{margin-top:14px;padding:6px 12px;background:var(--tint);border-radius:8px;color:var(--fg)}
+.hint{color:var(--mut);font-size:.9rem;margin-top:16px}
+.grade{display:flex;gap:10px;margin-top:12px}
+.grade button{flex:1;padding:13px}
+.hide{display:none}
+label{display:block;font-size:.9rem;color:var(--mut);margin:10px 0 3px}
+input,select,textarea{width:100%;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 10px}
+textarea{min-height:110px}
+section{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px 16px 16px;margin-bottom:14px}
+h2{font:600 1.05rem/1.3 Georgia,serif;margin:14px 0 4px}
+.item{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--bd)}
+.item div{min-width:0;overflow-wrap:anywhere}
+.item small{color:var(--mut)}
+.item button{padding:5px 10px;font-size:.85rem}
+.pv{margin-top:12px;border:1px dashed var(--bd);border-radius:10px;padding:10px 14px;background:var(--tint)}
+.pv .f{font:600 1.2rem/1.3 Georgia,serif;overflow-wrap:anywhere}
+.pv .b{white-space:pre-line;overflow-wrap:anywhere;margin-top:4px}
+.pv .w{color:var(--bad);margin-top:6px;font-size:.9rem}
+.pv .s{color:var(--mut);font-size:.9rem;margin-top:6px}
+.msg{color:var(--ac);min-height:1.4em;font-size:.9rem;margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+<h1>Irish flashcards</h1>
+<nav><button id="tStudy" class="on">Study</button><button id="tCards">Manage cards</button></nav>
+
+<div id="study">
+  <div class="row"><label for="flt" style="margin:0">Practice</label>
+    <select id="flt" style="width:auto"><option value="all">All cards</option><option value="vocab">Vocabulary</option><option value="phrase">Phrase</option><option value="conj">Conjugation</option></select></div>
+  <div class="stat" id="stat"></div>
+  <div class="card" id="card" tabindex="0" role="button" aria-label="Flip card"></div>
+  <div class="row hide" id="hear" style="margin-top:10px"></div>
+  <div class="msg" id="hmsg"></div>
+  <div class="grade hide" id="grade"><button class="bad" id="again">Practice again</button><button class="pri" id="got">I knew it</button></div>
+</div>
+
+<div id="manage" class="hide">
+  <section>
+    <h2 id="formTitle">Add a card</h2>
+    <p class="stat">Vocabulary (single words): put the Irish word on the front, with <i>an</i> or <i>na</i> if you like, and the English on the back. Listen finds the word without the article. Phrase: the Irish phrase on the front and the English on the back. Hear it copies the front into abair.ie. Conjugation: put only the Irish forms on the back, one per line.</p>
+    <label for="fType">Type</label>
+    <select id="fType"><option value="vocab">Vocabulary</option><option value="phrase">Phrase</option><option value="conj">Conjugation</option></select>
+    <label for="fFront">Front</label><input id="fFront" autocomplete="off">
+    <label for="fBack">Back (answer)</label><textarea id="fBack" style="min-height:64px"></textarea>
+    <label for="fPron">Your own pronunciation note (optional)</label><input id="fPron" autocomplete="off">
+    <div class="pv hide" id="prev" aria-live="polite"></div>
+    <div class="row" style="margin-top:12px"><button class="pri" id="save">Add card</button><button id="cancel" class="hide">Cancel edit</button></div>
+    <div class="msg" id="m1"></div>
+  </section>
+  <section>
+    <h2>Add many at once</h2>
+    <p class="stat">One card per line: <b>front | back | note</b> (the note is optional). Each back must fit on one line. For a multi-line back, use Add a card above.</p>
+    <label for="bType">Type for these cards</label>
+    <select id="bType"><option value="vocab">Vocabulary</option><option value="phrase">Phrase</option><option value="conj">Conjugation</option></select>
+    <label for="bulk">Cards</label><textarea id="bulk" placeholder="madra | dog | MAH-druh"></textarea>
+    <div class="row" style="margin-top:12px"><button id="bPrev">Preview</button><button class="pri" id="bAdd">Add cards</button></div>
+    <div class="pv hide" id="bprev" aria-live="polite"></div>
+    <div class="msg" id="m2"></div>
+  </section>
+  <section>
+    <h2>Backup and transfer</h2>
+    <p class="stat">Cards are saved in this browser only. Export to back them up or move them to another device.</p>
+    <div class="row"><button id="exp">Export deck</button><button id="impB">Import deck</button><button id="rst" class="bad">Reset to starter deck</button></div>
+    <input type="file" id="impF" accept=".json,application/json" class="hide">
+    <div class="msg" id="m3"></div>
+  </section>
+  <section>
+    <h2 id="listTitle">Your cards</h2>
+    <label for="q">Search</label><input id="q" type="search" autocomplete="off">
+    <label for="lf">Show</label>
+    <select id="lf"><option value="all">All cards</option><option value="vocab">Vocabulary</option><option value="phrase">Phrase</option><option value="conj">Conjugation</option></select>
+    <div id="list"></div>
+  </section>
+</div>
+</main>
+<script>
+(function(){
+var KEY="irishFlashcards.v1";
+var SEED=[
+["dia duit", "hello (God be with you)", "", "phrase"],
+["slán", "goodbye; safe", "", "vocab"],
+["go raibh maith agat", "thank you", "", "phrase"],
+["le do thoil", "please", "", "phrase"],
+["madra", "dog", "", "vocab"],
+["cat", "cat", "", "vocab"],
+["teach", "house", "", "vocab"],
+["bainne", "milk", "", "vocab"],
+["uisce", "water", "", "vocab"],
+["bó", "cow", "", "vocab"],
+["úll", "apple", "", "vocab"],
+["glan · present · sé / sí", "glanann sé", "", "conj"],
+["cuir · present · mé", "cuirim", "", "conj"],
+["ceannaigh · present · mé", "ceannaím", "", "conj"],
+["imigh · past · mé", "d’imigh mé", "", "conj"],
+["ól · past · sé / sí", "d’ól sé", "", "conj"],
+["cuir · future · sé / sí", "cuirfidh sé", "", "conj"],
+["glan · future · muid", "glanfaimid", "", "conj"],
+["glan · conditional · mé", "ghlanfainn", "", "conj"],
+["imir · present · mé", "imrím", "", "conj"],
+["oscail · future · tú", "osclóidh tú", "", "conj"],
+["máthair", "mother", "", "vocab"],
+["athair", "father", "", "vocab"],
+["deartháir", "brother", "", "vocab"],
+["deirfiúr", "sister", "", "vocab"],
+["mac", "son", "", "vocab"],
+["iníon", "daughter", "", "vocab"],
+["seanmháthair", "grandmother", "", "vocab"],
+["seanathair", "grandfather", "", "vocab"],
+["páiste", "child", "", "vocab"],
+["cara", "friend", "", "vocab"],
+["doras", "door", "", "vocab"],
+["fuinneog", "window", "", "vocab"],
+["bord", "table", "", "vocab"],
+["cathaoir", "chair", "", "vocab"],
+["leaba", "bed", "", "vocab"],
+["cistin", "kitchen", "", "vocab"],
+["seomra", "room", "", "vocab"],
+["arán", "bread", "", "vocab"],
+["im", "butter", "", "vocab"],
+["tae", "tea", "", "vocab"],
+["caife", "coffee", "", "vocab"],
+["feoil", "meat", "", "vocab"],
+["iasc", "fish", "", "vocab"],
+["ubh", "egg", "", "vocab"],
+["oráiste", "orange", "", "vocab"],
+["capall", "horse", "", "vocab"],
+["caora", "sheep", "", "vocab"],
+["éan", "bird", "", "vocab"],
+["muc", "pig", "", "vocab"],
+["dearg", "red", "", "vocab"],
+["gorm", "blue", "", "vocab"],
+["glas", "green; grey", "", "vocab"],
+["bán", "white", "", "vocab"],
+["dubh", "black", "", "vocab"],
+["buí", "yellow", "", "vocab"],
+["donn", "brown", "", "vocab"],
+["a haon", "one", "", "vocab"],
+["a dó", "two", "", "vocab"],
+["a trí", "three", "", "vocab"],
+["a ceathair", "four", "", "vocab"],
+["a cúig", "five", "", "vocab"],
+["a sé", "six", "", "vocab"],
+["a seacht", "seven", "", "vocab"],
+["a hocht", "eight", "", "vocab"],
+["a naoi", "nine", "", "vocab"],
+["a deich", "ten", "", "vocab"],
+["Dé Luain", "Monday", "", "vocab"],
+["Dé Máirt", "Tuesday", "", "vocab"],
+["Dé Céadaoin", "Wednesday", "", "vocab"],
+["Déardaoin", "Thursday", "", "vocab"],
+["Dé hAoine", "Friday", "", "vocab"],
+["Dé Sathairn", "Saturday", "", "vocab"],
+["Dé Domhnaigh", "Sunday", "", "vocab"],
+["lá", "day", "", "vocab"],
+["oíche", "night", "", "vocab"],
+["maidin", "morning", "", "vocab"],
+["tráthnóna", "evening", "", "vocab"],
+["inniu", "today", "", "vocab"],
+["inné", "yesterday", "", "vocab"],
+["amárach", "tomorrow", "", "vocab"],
+["grian", "sun", "", "vocab"],
+["gealach", "moon", "", "vocab"],
+["báisteach", "rain", "", "vocab"],
+["gaoth", "wind", "", "vocab"],
+["sneachta", "snow", "", "vocab"],
+["dia duit", "hello", "", "phrase"],
+["dia is muire duit", "hello (reply)", "", "phrase"],
+["conas atá tú?", "how are you?", "", "phrase"],
+["tá mé go maith", "I am well", "", "phrase"],
+["maidin mhaith", "good morning", "", "phrase"],
+["oíche mhaith", "good night", "", "phrase"],
+["slán go fóill", "goodbye for now", "", "phrase"],
+["tá fáilte romhat", "you’re welcome", "", "phrase"],
+["gabh mo leithscéal", "excuse me", "", "phrase"],
+["tá brón orm", "I’m sorry", "", "phrase"],
+["glan (clean) · present", "mé: glanaim\ntú: glanann tú\nsé / sí: glanann sé / sí\nmuid: glanaimid\nsibh: glanann sibh\nsiad: glanann siad\nautonomous: glantar", "", "conj"],
+["glan (clean) · past", "mé: ghlan mé\ntú: ghlan tú\nsé / sí: ghlan sé / sí\nmuid: ghlanamar\nsibh: ghlan sibh\nsiad: ghlan siad\nautonomous: glanadh", "", "conj"],
+["glan (clean) · future", "mé: glanfaidh mé\ntú: glanfaidh tú\nsé / sí: glanfaidh sé / sí\nmuid: glanfaimid\nsibh: glanfaidh sibh\nsiad: glanfaidh siad\nautonomous: glanfar", "", "conj"],
+["glan (clean) · conditional", "mé: ghlanfainn\ntú: ghlanfá\nsé / sí: ghlanfadh sé / sí\nmuid: ghlanfaimis\nsibh: ghlanfadh sibh\nsiad: ghlanfaidís\nautonomous: glanfaí", "", "conj"],
+["ól (drink) · present", "mé: ólaim\ntú: ólann tú\nsé / sí: ólann sé / sí\nmuid: ólaimid\nsibh: ólann sibh\nsiad: ólann siad\nautonomous: óltar", "", "conj"],
+["ól (drink) · past", "mé: d’ól mé\ntú: d’ól tú\nsé / sí: d’ól sé / sí\nmuid: d’ólamar\nsibh: d’ól sibh\nsiad: d’ól siad\nautonomous: óladh", "", "conj"],
+["ól (drink) · future", "mé: ólfaidh mé\ntú: ólfaidh tú\nsé / sí: ólfaidh sé / sí\nmuid: ólfaimid\nsibh: ólfaidh sibh\nsiad: ólfaidh siad\nautonomous: ólfar", "", "conj"],
+["ól (drink) · conditional", "mé: d’ólfainn\ntú: d’ólfá\nsé / sí: d’ólfadh sé / sí\nmuid: d’ólfaimis\nsibh: d’ólfadh sibh\nsiad: d’ólfaidís\nautonomous: ólfaí", "", "conj"],
+["fan (stay) · present", "mé: fanaim\ntú: fanann tú\nsé / sí: fanann sé / sí\nmuid: fanaimid\nsibh: fanann sibh\nsiad: fanann siad\nautonomous: fantar", "", "conj"],
+["fan (stay) · past", "mé: d’fhan mé\ntú: d’fhan tú\nsé / sí: d’fhan sé / sí\nmuid: d’fhanamar\nsibh: d’fhan sibh\nsiad: d’fhan siad\nautonomous: fanadh", "", "conj"],
+["fan (stay) · future", "mé: fanfaidh mé\ntú: fanfaidh tú\nsé / sí: fanfaidh sé / sí\nmuid: fanfaimid\nsibh: fanfaidh sibh\nsiad: fanfaidh siad\nautonomous: fanfar", "", "conj"],
+["fan (stay) · conditional", "mé: d’fhanfainn\ntú: d’fhanfá\nsé / sí: d’fhanfadh sé / sí\nmuid: d’fhanfaimis\nsibh: d’fhanfadh sibh\nsiad: d’fhanfaidís\nautonomous: fanfaí", "", "conj"],
+["bris (break) · present", "mé: brisim\ntú: briseann tú\nsé / sí: briseann sé / sí\nmuid: brisimid\nsibh: briseann sibh\nsiad: briseann siad\nautonomous: bristear", "", "conj"],
+["bris (break) · past", "mé: bhris mé\ntú: bhris tú\nsé / sí: bhris sé / sí\nmuid: bhriseamar\nsibh: bhris sibh\nsiad: bhris siad\nautonomous: briseadh", "", "conj"],
+["bris (break) · future", "mé: brisfidh mé\ntú: brisfidh tú\nsé / sí: brisfidh sé / sí\nmuid: brisfimid\nsibh: brisfidh sibh\nsiad: brisfidh siad\nautonomous: brisfear", "", "conj"],
+["bris (break) · conditional", "mé: bhrisfinn\ntú: bhrisfeá\nsé / sí: bhrisfeadh sé / sí\nmuid: bhrisfimis\nsibh: bhrisfeadh sibh\nsiad: bhrisfidís\nautonomous: brisfí", "", "conj"],
+["cuir (put) · present", "mé: cuirim\ntú: cuireann tú\nsé / sí: cuireann sé / sí\nmuid: cuirimid\nsibh: cuireann sibh\nsiad: cuireann siad\nautonomous: cuirtear", "", "conj"],
+["cuir (put) · past", "mé: chuir mé\ntú: chuir tú\nsé / sí: chuir sé / sí\nmuid: chuireamar\nsibh: chuir sibh\nsiad: chuir siad\nautonomous: cuireadh", "", "conj"],
+["cuir (put) · future", "mé: cuirfidh mé\ntú: cuirfidh tú\nsé / sí: cuirfidh sé / sí\nmuid: cuirfimid\nsibh: cuirfidh sibh\nsiad: cuirfidh siad\nautonomous: cuirfear", "", "conj"],
+["cuir (put) · conditional", "mé: chuirfinn\ntú: chuirfeá\nsé / sí: chuirfeadh sé / sí\nmuid: chuirfimis\nsibh: chuirfeadh sibh\nsiad: chuirfidís\nautonomous: cuirfí", "", "conj"],
+["caith (spend, wear, throw) · present", "mé: caithim\ntú: caitheann tú\nsé / sí: caitheann sé / sí\nmuid: caithimid\nsibh: caitheann sibh\nsiad: caitheann siad\nautonomous: caithtear", "", "conj"],
+["caith (spend, wear, throw) · past", "mé: chaith mé\ntú: chaith tú\nsé / sí: chaith sé / sí\nmuid: chaitheamar\nsibh: chaith sibh\nsiad: chaith siad\nautonomous: caitheadh", "", "conj"],
+["caith (spend, wear, throw) · future", "mé: caithfidh mé\ntú: caithfidh tú\nsé / sí: caithfidh sé / sí\nmuid: caithfimid\nsibh: caithfidh sibh\nsiad: caithfidh siad\nautonomous: caithfear", "", "conj"],
+["caith (spend, wear, throw) · conditional", "mé: chaithfinn\ntú: chaithfeá\nsé / sí: chaithfeadh sé / sí\nmuid: chaithfimis\nsibh: chaithfeadh sibh\nsiad: chaithfidís\nautonomous: caithfí", "", "conj"],
+["féach (look) · present", "mé: féachaim\ntú: féachann tú\nsé / sí: féachann sé / sí\nmuid: féachaimid\nsibh: féachann sibh\nsiad: féachann siad\nautonomous: féachtar", "", "conj"],
+["féach (look) · past", "mé: d’fhéach mé\ntú: d’fhéach tú\nsé / sí: d’fhéach sé / sí\nmuid: d’fhéachamar\nsibh: d’fhéach sibh\nsiad: d’fhéach siad\nautonomous: féachadh", "", "conj"],
+["féach (look) · future", "mé: féachfaidh mé\ntú: féachfaidh tú\nsé / sí: féachfaidh sé / sí\nmuid: féachfaimid\nsibh: féachfaidh sibh\nsiad: féachfaidh siad\nautonomous: féachfar", "", "conj"],
+["féach (look) · conditional", "mé: d’fhéachfainn\ntú: d’fhéachfá\nsé / sí: d’fhéachfadh sé / sí\nmuid: d’fhéachfaimis\nsibh: d’fhéachfadh sibh\nsiad: d’fhéachfaidís\nautonomous: féachfaí", "", "conj"],
+["fág (leave) · present", "mé: fágaim\ntú: fágann tú\nsé / sí: fágann sé / sí\nmuid: fágaimid\nsibh: fágann sibh\nsiad: fágann siad\nautonomous: fágtar", "", "conj"],
+["fág (leave) · past", "mé: d’fhág mé\ntú: d’fhág tú\nsé / sí: d’fhág sé / sí\nmuid: d’fhágamar\nsibh: d’fhág sibh\nsiad: d’fhág siad\nautonomous: fágadh", "", "conj"],
+["fág (leave) · future", "mé: fágfaidh mé\ntú: fágfaidh tú\nsé / sí: fágfaidh sé / sí\nmuid: fágfaimid\nsibh: fágfaidh sibh\nsiad: fágfaidh siad\nautonomous: fágfar", "", "conj"],
+["fág (leave) · conditional", "mé: d’fhágfainn\ntú: d’fhágfá\nsé / sí: d’fhágfadh sé / sí\nmuid: d’fhágfaimis\nsibh: d’fhágfadh sibh\nsiad: d’fhágfaidís\nautonomous: fágfaí", "", "conj"],
+["éist (listen) · present", "mé: éistim\ntú: éisteann tú\nsé / sí: éisteann sé / sí\nmuid: éistimid\nsibh: éisteann sibh\nsiad: éisteann siad\nautonomous: éisttear", "", "conj"],
+["éist (listen) · past", "mé: d’éist mé\ntú: d’éist tú\nsé / sí: d’éist sé / sí\nmuid: d’éisteamar\nsibh: d’éist sibh\nsiad: d’éist siad\nautonomous: éisteadh", "", "conj"],
+["éist (listen) · future", "mé: éistfidh mé\ntú: éistfidh tú\nsé / sí: éistfidh sé / sí\nmuid: éistfimid\nsibh: éistfidh sibh\nsiad: éistfidh siad\nautonomous: éistfear", "", "conj"],
+["éist (listen) · conditional", "mé: d’éistfinn\ntú: d’éistfeá\nsé / sí: d’éistfeadh sé / sí\nmuid: d’éistfimis\nsibh: d’éistfeadh sibh\nsiad: d’éistfidís\nautonomous: éistfí", "", "conj"],
+["díol (sell) · present", "mé: díolaim\ntú: díolann tú\nsé / sí: díolann sé / sí\nmuid: díolaimid\nsibh: díolann sibh\nsiad: díolann siad\nautonomous: díoltar", "", "conj"],
+["díol (sell) · past", "mé: dhíol mé\ntú: dhíol tú\nsé / sí: dhíol sé / sí\nmuid: dhíolamar\nsibh: dhíol sibh\nsiad: dhíol siad\nautonomous: díoladh", "", "conj"],
+["díol (sell) · future", "mé: díolfaidh mé\ntú: díolfaidh tú\nsé / sí: díolfaidh sé / sí\nmuid: díolfaimid\nsibh: díolfaidh sibh\nsiad: díolfaidh siad\nautonomous: díolfar", "", "conj"],
+["díol (sell) · conditional", "mé: dhíolfainn\ntú: dhíolfá\nsé / sí: dhíolfadh sé / sí\nmuid: dhíolfaimis\nsibh: dhíolfadh sibh\nsiad: dhíolfaidís\nautonomous: díolfaí", "", "conj"],
+["tóg (take, lift) · present", "mé: tógaim\ntú: tógann tú\nsé / sí: tógann sé / sí\nmuid: tógaimid\nsibh: tógann sibh\nsiad: tógann siad\nautonomous: tógtar", "", "conj"],
+["tóg (take, lift) · past", "mé: thóg mé\ntú: thóg tú\nsé / sí: thóg sé / sí\nmuid: thógamar\nsibh: thóg sibh\nsiad: thóg siad\nautonomous: tógadh", "", "conj"],
+["tóg (take, lift) · future", "mé: tógfaidh mé\ntú: tógfaidh tú\nsé / sí: tógfaidh sé / sí\nmuid: tógfaimid\nsibh: tógfaidh sibh\nsiad: tógfaidh siad\nautonomous: tógfar", "", "conj"],
+["tóg (take, lift) · conditional", "mé: thógfainn\ntú: thógfá\nsé / sí: thógfadh sé / sí\nmuid: thógfaimis\nsibh: thógfadh sibh\nsiad: thógfaidís\nautonomous: tógfaí", "", "conj"],
+["scríobh (write) · present", "mé: scríobhaim\ntú: scríobhann tú\nsé / sí: scríobhann sé / sí\nmuid: scríobhaimid\nsibh: scríobhann sibh\nsiad: scríobhann siad\nautonomous: scríobhtar", "", "conj"],
+["scríobh (write) · past", "mé: scríobh mé\ntú: scríobh tú\nsé / sí: scríobh sé / sí\nmuid: scríobhamar\nsibh: scríobh sibh\nsiad: scríobh siad\nautonomous: scríobhadh", "", "conj"],
+["scríobh (write) · future", "mé: scríobhfaidh mé\ntú: scríobhfaidh tú\nsé / sí: scríobhfaidh sé / sí\nmuid: scríobhfaimid\nsibh: scríobhfaidh sibh\nsiad: scríobhfaidh siad\nautonomous: scríobhfar", "", "conj"],
+["scríobh (write) · conditional", "mé: scríobhfainn\ntú: scríobhfá\nsé / sí: scríobhfadh sé / sí\nmuid: scríobhfaimis\nsibh: scríobhfadh sibh\nsiad: scríobhfaidís\nautonomous: scríobhfaí", "", "conj"],
+["mol (praise) · present", "mé: molaim\ntú: molann tú\nsé / sí: molann sé / sí\nmuid: molaimid\nsibh: molann sibh\nsiad: molann siad\nautonomous: moltar", "", "conj"],
+["mol (praise) · past", "mé: mhol mé\ntú: mhol tú\nsé / sí: mhol sé / sí\nmuid: mholamar\nsibh: mhol sibh\nsiad: mhol siad\nautonomous: moladh", "", "conj"],
+["mol (praise) · future", "mé: molfaidh mé\ntú: molfaidh tú\nsé / sí: molfaidh sé / sí\nmuid: molfaimid\nsibh: molfaidh sibh\nsiad: molfaidh siad\nautonomous: molfar", "", "conj"],
+["mol (praise) · conditional", "mé: mholfainn\ntú: mholfá\nsé / sí: mholfadh sé / sí\nmuid: mholfaimis\nsibh: mholfadh sibh\nsiad: mholfaidís\nautonomous: molfaí", "", "conj"],
+["ceannaigh (buy) · present", "mé: ceannaím\ntú: ceannaíonn tú\nsé / sí: ceannaíonn sé / sí\nmuid: ceannaímid\nsibh: ceannaíonn sibh\nsiad: ceannaíonn siad\nautonomous: ceannaítear", "", "conj"],
+["ceannaigh (buy) · past", "mé: cheannaigh mé\ntú: cheannaigh tú\nsé / sí: cheannaigh sé / sí\nmuid: cheannaíomar\nsibh: cheannaigh sibh\nsiad: cheannaigh siad\nautonomous: ceannaíodh", "", "conj"],
+["ceannaigh (buy) · future", "mé: ceannóidh mé\ntú: ceannóidh tú\nsé / sí: ceannóidh sé / sí\nmuid: ceannóimid\nsibh: ceannóidh sibh\nsiad: ceannóidh siad\nautonomous: ceannófar", "", "conj"],
+["ceannaigh (buy) · conditional", "mé: cheannóinn\ntú: cheannófá\nsé / sí: cheannódh sé / sí\nmuid: cheannóimis\nsibh: cheannódh sibh\nsiad: cheannóidís\nautonomous: ceannófaí", "", "conj"],
+["imigh (leave, go away) · present", "mé: imím\ntú: imíonn tú\nsé / sí: imíonn sé / sí\nmuid: imímid\nsibh: imíonn sibh\nsiad: imíonn siad\nautonomous: imítear", "", "conj"],
+["imigh (leave, go away) · past", "mé: d’imigh mé\ntú: d’imigh tú\nsé / sí: d’imigh sé / sí\nmuid: d’imíomar\nsibh: d’imigh sibh\nsiad: d’imigh siad\nautonomous: imíodh", "", "conj"],
+["imigh (leave, go away) · future", "mé: imeoidh mé\ntú: imeoidh tú\nsé / sí: imeoidh sé / sí\nmuid: imeoimid\nsibh: imeoidh sibh\nsiad: imeoidh siad\nautonomous: imeofar", "", "conj"],
+["imigh (leave, go away) · conditional", "mé: d’imeoinn\ntú: d’imeofá\nsé / sí: d’imeodh sé / sí\nmuid: d’imeoimis\nsibh: d’imeodh sibh\nsiad: d’imeoidís\nautonomous: imeofaí", "", "conj"],
+["tosaigh (begin) · present", "mé: tosaím\ntú: tosaíonn tú\nsé / sí: tosaíonn sé / sí\nmuid: tosaímid\nsibh: tosaíonn sibh\nsiad: tosaíonn siad\nautonomous: tosaítear", "", "conj"],
+["tosaigh (begin) · past", "mé: thosaigh mé\ntú: thosaigh tú\nsé / sí: thosaigh sé / sí\nmuid: thosaíomar\nsibh: thosaigh sibh\nsiad: thosaigh siad\nautonomous: tosaíodh", "", "conj"],
+["tosaigh (begin) · future", "mé: tosóidh mé\ntú: tosóidh tú\nsé / sí: tosóidh sé / sí\nmuid: tosóimid\nsibh: tosóidh sibh\nsiad: tosóidh siad\nautonomous: tosófar", "", "conj"],
+["tosaigh (begin) · conditional", "mé: thosóinn\ntú: thosófá\nsé / sí: thosódh sé / sí\nmuid: thosóimis\nsibh: thosódh sibh\nsiad: thosóidís\nautonomous: tosófaí", "", "conj"],
+["éirigh (rise, get up) · present", "mé: éirím\ntú: éiríonn tú\nsé / sí: éiríonn sé / sí\nmuid: éirímid\nsibh: éiríonn sibh\nsiad: éiríonn siad\nautonomous: éirítear", "", "conj"],
+["éirigh (rise, get up) · past", "mé: d’éirigh mé\ntú: d’éirigh tú\nsé / sí: d’éirigh sé / sí\nmuid: d’éiríomar\nsibh: d’éirigh sibh\nsiad: d’éirigh siad\nautonomous: éiríodh", "", "conj"],
+["éirigh (rise, get up) · future", "mé: éireoidh mé\ntú: éireoidh tú\nsé / sí: éireoidh sé / sí\nmuid: éireoimid\nsibh: éireoidh sibh\nsiad: éireoidh siad\nautonomous: éireofar", "", "conj"],
+["éirigh (rise, get up) · conditional", "mé: d’éireoinn\ntú: d’éireofá\nsé / sí: d’éireodh sé / sí\nmuid: d’éireoimis\nsibh: d’éireodh sibh\nsiad: d’éireoidís\nautonomous: éireofaí", "", "conj"],
+["bailigh (collect) · present", "mé: bailím\ntú: bailíonn tú\nsé / sí: bailíonn sé / sí\nmuid: bailímid\nsibh: bailíonn sibh\nsiad: bailíonn siad\nautonomous: bailítear", "", "conj"],
+["bailigh (collect) · past", "mé: bhailigh mé\ntú: bhailigh tú\nsé / sí: bhailigh sé / sí\nmuid: bhailíomar\nsibh: bhailigh sibh\nsiad: bhailigh siad\nautonomous: bailíodh", "", "conj"],
+["bailigh (collect) · future", "mé: baileoidh mé\ntú: baileoidh tú\nsé / sí: baileoidh sé / sí\nmuid: baileoimid\nsibh: baileoidh sibh\nsiad: baileoidh siad\nautonomous: baileofar", "", "conj"],
+["bailigh (collect) · conditional", "mé: bhaileoinn\ntú: bhaileofá\nsé / sí: bhaileodh sé / sí\nmuid: bhaileoimis\nsibh: bhaileodh sibh\nsiad: bhaileoidís\nautonomous: baileofaí", "", "conj"],
+["dúisigh (wake) · present", "mé: dúisím\ntú: dúisíonn tú\nsé / sí: dúisíonn sé / sí\nmuid: dúisímid\nsibh: dúisíonn sibh\nsiad: dúisíonn siad\nautonomous: dúisítear", "", "conj"],
+["dúisigh (wake) · past", "mé: dhúisigh mé\ntú: dhúisigh tú\nsé / sí: dhúisigh sé / sí\nmuid: dhúisíomar\nsibh: dhúisigh sibh\nsiad: dhúisigh siad\nautonomous: dúisíodh", "", "conj"],
+["dúisigh (wake) · future", "mé: dúiseoidh mé\ntú: dúiseoidh tú\nsé / sí: dúiseoidh sé / sí\nmuid: dúiseoimid\nsibh: dúiseoidh sibh\nsiad: dúiseoidh siad\nautonomous: dúiseofar", "", "conj"],
+["dúisigh (wake) · conditional", "mé: dhúiseoinn\ntú: dhúiseofá\nsé / sí: dhúiseodh sé / sí\nmuid: dhúiseoimis\nsibh: dhúiseodh sibh\nsiad: dhúiseoidís\nautonomous: dúiseofaí", "", "conj"],
+["cabhraigh (help) · present", "mé: cabhraím\ntú: cabhraíonn tú\nsé / sí: cabhraíonn sé / sí\nmuid: cabhraímid\nsibh: cabhraíonn sibh\nsiad: cabhraíonn siad\nautonomous: cabhraítear", "", "conj"],
+["cabhraigh (help) · past", "mé: chabhraigh mé\ntú: chabhraigh tú\nsé / sí: chabhraigh sé / sí\nmuid: chabhraíomar\nsibh: chabhraigh sibh\nsiad: chabhraigh siad\nautonomous: cabhraíodh", "", "conj"],
+["cabhraigh (help) · future", "mé: cabhróidh mé\ntú: cabhróidh tú\nsé / sí: cabhróidh sé / sí\nmuid: cabhróimid\nsibh: cabhróidh sibh\nsiad: cabhróidh siad\nautonomous: cabhrófar", "", "conj"],
+["cabhraigh (help) · conditional", "mé: chabhróinn\ntú: chabhrófá\nsé / sí: chabhródh sé / sí\nmuid: chabhróimis\nsibh: chabhródh sibh\nsiad: chabhróidís\nautonomous: cabhrófaí", "", "conj"],
+["ullmhaigh (prepare) · present", "mé: ullmhaím\ntú: ullmhaíonn tú\nsé / sí: ullmhaíonn sé / sí\nmuid: ullmhaímid\nsibh: ullmhaíonn sibh\nsiad: ullmhaíonn siad\nautonomous: ullmhaítear", "", "conj"],
+["ullmhaigh (prepare) · past", "mé: d’ullmhaigh mé\ntú: d’ullmhaigh tú\nsé / sí: d’ullmhaigh sé / sí\nmuid: d’ullmhaíomar\nsibh: d’ullmhaigh sibh\nsiad: d’ullmhaigh siad\nautonomous: ullmhaíodh", "", "conj"],
+["ullmhaigh (prepare) · future", "mé: ullmhóidh mé\ntú: ullmhóidh tú\nsé / sí: ullmhóidh sé / sí\nmuid: ullmhóimid\nsibh: ullmhóidh sibh\nsiad: ullmhóidh siad\nautonomous: ullmhófar", "", "conj"],
+["ullmhaigh (prepare) · conditional", "mé: d’ullmhóinn\ntú: d’ullmhófá\nsé / sí: d’ullmhódh sé / sí\nmuid: d’ullmhóimis\nsibh: d’ullmhódh sibh\nsiad: d’ullmhóidís\nautonomous: ullmhófaí", "", "conj"],
+["críochnaigh (finish) · present", "mé: críochnaím\ntú: críochnaíonn tú\nsé / sí: críochnaíonn sé / sí\nmuid: críochnaímid\nsibh: críochnaíonn sibh\nsiad: críochnaíonn siad\nautonomous: críochnaítear", "", "conj"],
+["críochnaigh (finish) · past", "mé: chríochnaigh mé\ntú: chríochnaigh tú\nsé / sí: chríochnaigh sé / sí\nmuid: chríochnaíomar\nsibh: chríochnaigh sibh\nsiad: chríochnaigh siad\nautonomous: críochnaíodh", "", "conj"],
+["críochnaigh (finish) · future", "mé: críochnóidh mé\ntú: críochnóidh tú\nsé / sí: críochnóidh sé / sí\nmuid: críochnóimid\nsibh: críochnóidh sibh\nsiad: críochnóidh siad\nautonomous: críochnófar", "", "conj"],
+["críochnaigh (finish) · conditional", "mé: chríochnóinn\ntú: chríochnófá\nsé / sí: chríochnódh sé / sí\nmuid: chríochnóimis\nsibh: chríochnódh sibh\nsiad: chríochnóidís\nautonomous: críochnófaí", "", "conj"],
+["imir (play) · present", "mé: imrím\ntú: imríonn tú\nsé / sí: imríonn sé / sí\nmuid: imrímid\nsibh: imríonn sibh\nsiad: imríonn siad\nautonomous: imrítear", "", "conj"],
+["imir (play) · past", "mé: d’imir mé\ntú: d’imir tú\nsé / sí: d’imir sé / sí\nmuid: d’imríomar\nsibh: d’imir sibh\nsiad: d’imir siad\nautonomous: imríodh", "", "conj"],
+["imir (play) · future", "mé: imreoidh mé\ntú: imreoidh tú\nsé / sí: imreoidh sé / sí\nmuid: imreoimid\nsibh: imreoidh sibh\nsiad: imreoidh siad\nautonomous: imreofar", "", "conj"],
+["imir (play) · conditional", "mé: d’imreoinn\ntú: d’imreofá\nsé / sí: d’imreodh sé / sí\nmuid: d’imreoimis\nsibh: d’imreodh sibh\nsiad: d’imreoidís\nautonomous: imreofaí", "", "conj"],
+["oscail (open) · present", "mé: osclaím\ntú: osclaíonn tú\nsé / sí: osclaíonn sé / sí\nmuid: osclaímid\nsibh: osclaíonn sibh\nsiad: osclaíonn siad\nautonomous: osclaítear", "", "conj"],
+["oscail (open) · past", "mé: d’oscail mé\ntú: d’oscail tú\nsé / sí: d’oscail sé / sí\nmuid: d’osclaíomar\nsibh: d’oscail sibh\nsiad: d’oscail siad\nautonomous: osclaíodh", "", "conj"],
+["oscail (open) · future", "mé: osclóidh mé\ntú: osclóidh tú\nsé / sí: osclóidh sé / sí\nmuid: osclóimid\nsibh: osclóidh sibh\nsiad: osclóidh siad\nautonomous: osclófar", "", "conj"],
+["oscail (open) · conditional", "mé: d’osclóinn\ntú: d’osclófá\nsé / sí: d’osclódh sé / sí\nmuid: d’osclóimis\nsibh: d’osclódh sibh\nsiad: d’osclóidís\nautonomous: osclófaí", "", "conj"],
+["labhair (speak) · present", "mé: labhraím\ntú: labhraíonn tú\nsé / sí: labhraíonn sé / sí\nmuid: labhraímid\nsibh: labhraíonn sibh\nsiad: labhraíonn siad\nautonomous: labhraítear", "", "conj"],
+["labhair (speak) · past", "mé: labhair mé\ntú: labhair tú\nsé / sí: labhair sé / sí\nmuid: labhraíomar\nsibh: labhair sibh\nsiad: labhair siad\nautonomous: labhraíodh", "", "conj"],
+["labhair (speak) · future", "mé: labhróidh mé\ntú: labhróidh tú\nsé / sí: labhróidh sé / sí\nmuid: labhróimid\nsibh: labhróidh sibh\nsiad: labhróidh siad\nautonomous: labhrófar", "", "conj"],
+["labhair (speak) · conditional", "mé: labhróinn\ntú: labhrófá\nsé / sí: labhródh sé / sí\nmuid: labhróimis\nsibh: labhródh sibh\nsiad: labhróidís\nautonomous: labhrófaí", "", "conj"],
+["aithin (recognise) · present", "mé: aithním\ntú: aithníonn tú\nsé / sí: aithníonn sé / sí\nmuid: aithnímid\nsibh: aithníonn sibh\nsiad: aithníonn siad\nautonomous: aithnítear", "", "conj"],
+["aithin (recognise) · past", "mé: d’aithin mé\ntú: d’aithin tú\nsé / sí: d’aithin sé / sí\nmuid: d’aithníomar\nsibh: d’aithin sibh\nsiad: d’aithin siad\nautonomous: aithníodh", "", "conj"],
+["aithin (recognise) · future", "mé: aithneoidh mé\ntú: aithneoidh tú\nsé / sí: aithneoidh sé / sí\nmuid: aithneoimid\nsibh: aithneoidh sibh\nsiad: aithneoidh siad\nautonomous: aithneofar", "", "conj"],
+["aithin (recognise) · conditional", "mé: d’aithneoinn\ntú: d’aithneofá\nsé / sí: d’aithneodh sé / sí\nmuid: d’aithneoimis\nsibh: d’aithneodh sibh\nsiad: d’aithneoidís\nautonomous: aithneofaí", "", "conj"],
+["eitil (fly) · present", "mé: eitlím\ntú: eitlíonn tú\nsé / sí: eitlíonn sé / sí\nmuid: eitlímid\nsibh: eitlíonn sibh\nsiad: eitlíonn siad\nautonomous: eitlítear", "", "conj"],
+["eitil (fly) · past", "mé: d’eitil mé\ntú: d’eitil tú\nsé / sí: d’eitil sé / sí\nmuid: d’eitlíomar\nsibh: d’eitil sibh\nsiad: d’eitil siad\nautonomous: eitlíodh", "", "conj"],
+["eitil (fly) · future", "mé: eitleoidh mé\ntú: eitleoidh tú\nsé / sí: eitleoidh sé / sí\nmuid: eitleoimid\nsibh: eitleoidh sibh\nsiad: eitleoidh siad\nautonomous: eitleofar", "", "conj"],
+["eitil (fly) · conditional", "mé: d’eitleoinn\ntú: d’eitleofá\nsé / sí: d’eitleodh sé / sí\nmuid: d’eitleoimis\nsibh: d’eitleodh sibh\nsiad: d’eitleoidís\nautonomous: eitleofaí", "", "conj"],
+["inis (tell) · present", "mé: insím\ntú: insíonn tú\nsé / sí: insíonn sé / sí\nmuid: insímid\nsibh: insíonn sibh\nsiad: insíonn siad\nautonomous: insítear", "", "conj"],
+["inis (tell) · past", "mé: d’inis mé\ntú: d’inis tú\nsé / sí: d’inis sé / sí\nmuid: d’insíomar\nsibh: d’inis sibh\nsiad: d’inis siad\nautonomous: insíodh", "", "conj"],
+["inis (tell) · future", "mé: inseoidh mé\ntú: inseoidh tú\nsé / sí: inseoidh sé / sí\nmuid: inseoimid\nsibh: inseoidh sibh\nsiad: inseoidh siad\nautonomous: inseofar", "", "conj"],
+["inis (tell) · conditional", "mé: d’inseoinn\ntú: d’inseofá\nsé / sí: d’inseodh sé / sí\nmuid: d’inseoimis\nsibh: d’inseodh sibh\nsiad: d’inseoidís\nautonomous: inseofaí", "", "conj"],
+["freagair (answer) · present", "mé: freagraím\ntú: freagraíonn tú\nsé / sí: freagraíonn sé / sí\nmuid: freagraímid\nsibh: freagraíonn sibh\nsiad: freagraíonn siad\nautonomous: freagraítear", "", "conj"],
+["freagair (answer) · past", "mé: d’fhreagair mé\ntú: d’fhreagair tú\nsé / sí: d’fhreagair sé / sí\nmuid: d’fhreagraíomar\nsibh: d’fhreagair sibh\nsiad: d’fhreagair siad\nautonomous: freagraíodh", "", "conj"],
+["freagair (answer) · future", "mé: freagróidh mé\ntú: freagróidh tú\nsé / sí: freagróidh sé / sí\nmuid: freagróimid\nsibh: freagróidh sibh\nsiad: freagróidh siad\nautonomous: freagrófar", "", "conj"],
+["freagair (answer) · conditional", "mé: d’fhreagróinn\ntú: d’fhreagrófá\nsé / sí: d’fhreagródh sé / sí\nmuid: d’fhreagróimis\nsibh: d’fhreagródh sibh\nsiad: d’fhreagróidís\nautonomous: freagrófaí", "", "conj"],
+["codail (sleep) · present", "mé: codlaím\ntú: codlaíonn tú\nsé / sí: codlaíonn sé / sí\nmuid: codlaímid\nsibh: codlaíonn sibh\nsiad: codlaíonn siad\nautonomous: codlaítear", "", "conj"],
+["codail (sleep) · past", "mé: chodail mé\ntú: chodail tú\nsé / sí: chodail sé / sí\nmuid: chodlaíomar\nsibh: chodail sibh\nsiad: chodail siad\nautonomous: codlaíodh", "", "conj"],
+["codail (sleep) · future", "mé: codlóidh mé\ntú: codlóidh tú\nsé / sí: codlóidh sé / sí\nmuid: codlóimid\nsibh: codlóidh sibh\nsiad: codlóidh siad\nautonomous: codlófar", "", "conj"],
+["codail (sleep) · conditional", "mé: chodlóinn\ntú: chodlófá\nsé / sí: chodlódh sé / sí\nmuid: chodlóimis\nsibh: chodlódh sibh\nsiad: chodlóidís\nautonomous: codlófaí", "", "conj"],
+["foghlaim (learn) · present", "mé: foghlaimím\ntú: foghlaimíonn tú\nsé / sí: foghlaimíonn sé / sí\nmuid: foghlaimímid\nsibh: foghlaimíonn sibh\nsiad: foghlaimíonn siad\nautonomous: foghlaimítear", "", "conj"],
+["foghlaim (learn) · past", "mé: d’fhoghlaim mé\ntú: d’fhoghlaim tú\nsé / sí: d’fhoghlaim sé / sí\nmuid: d’fhoghlaimíomar\nsibh: d’fhoghlaim sibh\nsiad: d’fhoghlaim siad\nautonomous: foghlaimíodh", "", "conj"],
+["foghlaim (learn) · future", "mé: foghlaimeoidh mé\ntú: foghlaimeoidh tú\nsé / sí: foghlaimeoidh sé / sí\nmuid: foghlaimeoimid\nsibh: foghlaimeoidh sibh\nsiad: foghlaimeoidh siad\nautonomous: foghlaimeofar", "", "conj"],
+["foghlaim (learn) · conditional", "mé: d’fhoghlaimeoinn\ntú: d’fhoghlaimeofá\nsé / sí: d’fhoghlaimeodh sé / sí\nmuid: d’fhoghlaimeoimis\nsibh: d’fhoghlaimeodh sibh\nsiad: d’fhoghlaimeoidís\nautonomous: foghlaimeofaí", "", "conj"],
+["tarraing (pull, draw) · present", "mé: tarraingím\ntú: tarraingíonn tú\nsé / sí: tarraingíonn sé / sí\nmuid: tarraingímid\nsibh: tarraingíonn sibh\nsiad: tarraingíonn siad\nautonomous: tarraingítear", "", "conj"],
+["tarraing (pull, draw) · past", "mé: tharraing mé\ntú: tharraing tú\nsé / sí: tharraing sé / sí\nmuid: tharraingíomar\nsibh: tharraing sibh\nsiad: tharraing siad\nautonomous: tarraingíodh", "", "conj"],
+["tarraing (pull, draw) · future", "mé: tarraingeoidh mé\ntú: tarraingeoidh tú\nsé / sí: tarraingeoidh sé / sí\nmuid: tarraingeoimid\nsibh: tarraingeoidh sibh\nsiad: tarraingeoidh siad\nautonomous: tarraingeofar", "", "conj"],
+["tarraing (pull, draw) · conditional", "mé: tharraingeoinn\ntú: tharraingeofá\nsé / sí: tharraingeodh sé / sí\nmuid: tharraingeoimis\nsibh: tharraingeodh sibh\nsiad: tharraingeoidís\nautonomous: tarraingeofaí", "", "conj"]
+];
+var PHRASES=["dia duit", "dia is muire duit", "conas atá tú?", "tá mé go maith", "maidin mhaith", "oíche mhaith", "slán go fóill", "go raibh maith agat", "le do thoil", "tá fáilte romhat", "gabh mo leithscéal", "tá brón orm"];
+var $=function(i){return document.getElementById(i)};
+var cards=load(),cur=null,flipped=false,editing=null;
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function mk(c){return {id:uid(),front:c[0],back:c[1],pron:"",type:c[3]||"vocab",box:0}}
+function load(){
+  try{
+    var s=localStorage.getItem(KEY);
+    if(s){
+      var a=JSON.parse(s);
+      if(Array.isArray(a)){
+        if(!localStorage.getItem(KEY+".noStarterGuides")){
+          var sf={};SEED.forEach(function(c){sf[c[0]]=1});
+          a.forEach(function(c){if(sf[c.front])c.pron=""});
+          localStorage.setItem(KEY,JSON.stringify(a));
+          localStorage.setItem(KEY+".noStarterGuides","1");
+        }
+        if(!localStorage.getItem(KEY+".ext1")){
+          var have={};a.forEach(function(c){have[norm(c.front)+"\u0001"+norm(c.back)]=1});
+          SEED.forEach(function(c){if(!have[norm(c[0])+"\u0001"+norm(c[1])])a.push(mk(c))});
+          localStorage.setItem(KEY,JSON.stringify(a));
+          localStorage.setItem(KEY+".ext1","1");
+        }
+        if(!localStorage.getItem(KEY+".phrase1")){
+          var ph={};PHRASES.forEach(function(x){ph[norm(x)]=1});
+          a.forEach(function(c){if(c.type==="vocab"&&ph[norm(c.front)])c.type="phrase"});
+          localStorage.setItem(KEY,JSON.stringify(a));
+          localStorage.setItem(KEY+".phrase1","1");
+        }
+        return a;
+      }
+    }
+  }catch(e){}
+  try{localStorage.setItem(KEY+".noStarterGuides","1");localStorage.setItem(KEY+".ext1","1");localStorage.setItem(KEY+".phrase1","1")}catch(e){}
+  return SEED.map(mk);
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(cards))}catch(e){msg("m3","This browser would not save your cards. Use Export deck to keep a copy.")}}
+function msg(id,t){$(id).textContent=t}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+var TYPES={vocab:"Vocabulary",phrase:"Phrase",conj:"Conjugation"};
+function typeName(t){return TYPES[t]||"Vocabulary"}
+function normType(t){return TYPES[t]?t:"vocab"}
+function norm(s){return String(s).trim().toLowerCase().replace(/\s+/g," ")}
+/* the dictionary form of a noun: removes a leading an / na / an t- and undoes lenition after an */
+function headword(w){
+  var s=String(w).trim().replace(/\s+/g," "),m;
+  if((m=s.match(/^an t-(.+)$/i)))return m[1];
+  if((m=s.match(/^an t([AEIOUÁÉÍÓÚ].*)$/)))return m[1];
+  if((m=s.match(/^an ts(.+)$/i)))return "s"+m[1];
+  if((m=s.match(/^an (.+)$/i)))return m[1].replace(/^([bcdfgmpst])h/i,"$1");
+  if((m=s.match(/^na h-?([aeiouáéíóú].*)$/i)))return m[1];
+  if((m=s.match(/^na (.+)$/i)))return m[1];
+  return s;
+}
+function frontKey(t,f){return norm(normType(t)==="vocab"?headword(f):f)}
+function findDup(f,b,skipId,t){
+  t=normType(t);
+  var nf=frontKey(t,f),nb=norm(b),same=null,front=null;
+  cards.forEach(function(c){
+    if(c.id===skipId||normType(c.type)!==t||frontKey(c.type,c.front)!==nf)return;
+    if(norm(c.back)===nb)same=same||c;else front=front||c;
+  });
+  return {same:same,front:front};
+}
+
+/* study */
+function pool(){var f=$("flt").value;return cards.filter(function(c){return f==="all"||normType(c.type)===f})}
+function next(){
+  var p=pool();
+  if(!p.length){cur=null;draw();return}
+  var cand=p.length>1?p.filter(function(c){return !cur||c.id!==cur.id}):p;
+  var tot=0,w=cand.map(function(c){var x=5-(c.box||0);tot+=x;return x});
+  var r=Math.random()*tot,i=0;
+  while(i<cand.length-1&&r>=w[i]){r-=w[i];i++}
+  cur=cand[i];flipped=false;draw();
+}
+/* draws one card face; used by the study card and by the preview in the form */
+function faceInto(k,c,fl){
+  k.textContent="";
+  k.appendChild(el("div","tag",typeName(c.type)+(fl?" · answer":"")));
+  if(!fl){
+    k.appendChild(el("div","big",c.front));
+    k.appendChild(el("div","hint","Tap to see the answer"));
+  }else{
+    k.appendChild(el("div","big"+(c.back.indexOf("\n")>-1?" multi":""),c.back));
+    if(c.pron)k.appendChild(el("div","pron","Say it: "+c.pron));
+    k.appendChild(el("div","hint",c.front));
+  }
+}
+/* the sound buttons for a card; h holds the buttons and m the message */
+function soundFor(c,h,m){
+  h.textContent="";m.textContent="";
+  if(normType(c.type)==="vocab"){
+    var w=headword(c.front);
+    var a=el("a","btn","Listen (Connacht, teanglann.ie)");
+    a.href=teangUrl(w);a.target="irishTeanglann";h.appendChild(a);
+    var cb=el("button",null,"Copy word");
+    cb.addEventListener("click",function(){
+      copyText(w.trim()).then(
+        function(){m.textContent="Copied. If the Listen page didn't load, paste the word into the search box at teanglann.ie."},
+        function(){m.textContent="Could not copy. Select the word on the card and copy it yourself."});
+    });
+    h.appendChild(cb);
+  }else{
+    var txt=c.type==="phrase"?c.front.trim():speakText(c);
+    var b=el("button",null,"Hear it (abair.ie)");
+    b.addEventListener("click",function(){
+      copyText(txt).then(
+        function(){m.textContent="Copied. Paste it into abair.ie and choose Conamara."},
+        function(){m.textContent="Could not copy. Select the text on the card and copy it yourself."});
+      window.open("https://abair.ie","irishAbair");
+    });
+    h.appendChild(b);
+  }
+  h.classList.remove("hide");
+}
+function draw(){
+  var p=pool(),known=p.filter(function(c){return (c.box||0)>=4}).length;
+  $("stat").textContent=p.length?p.length+" cards, "+known+" well known":"";
+  var k=$("card");k.textContent="";
+  var h0=$("hear");h0.textContent="";h0.classList.add("hide");$("hmsg").textContent="";
+  if(!cur){
+    k.appendChild(el("div","big","No cards yet"));
+    k.appendChild(el("div","hint","Open Manage cards to add some."));
+    $("grade").classList.add("hide");return;
+  }
+  faceInto(k,cur,flipped);
+  if(!flipped){$("grade").classList.add("hide");return}
+  $("grade").classList.remove("hide");
+  soundFor(cur,$("hear"),$("hmsg"));
+}
+function teangUrl(w){
+  var s=String(w).replace(/[?#%&<>*:\\\/|"]/g,"").replace(/\s+/g," ").trim().replace(/[.,;]+$/,"").trim().replace(/ /g,"_");
+  return "https://www.teanglann.ie/en/fuaim/"+(s?encodeURIComponent(s):"");
+}
+function speakText(c){return c.back.split("\n").map(function(l){return l.replace(/^[^:]*:\s*/,"")}).join(". ")}
+function copyText(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t);
+  return new Promise(function(res,rej){
+    var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";
+    document.body.appendChild(a);a.select();
+    try{document.execCommand("copy")?res():rej()}catch(e){rej()}
+    a.remove();
+  });
+}
+function flip(){if(cur){flipped=!flipped;draw()}}
+$("card").addEventListener("click",flip);
+$("card").addEventListener("keydown",function(e){if(e.key===" "||e.key==="Enter"){e.preventDefault();flip()}});
+$("got").addEventListener("click",function(){if(cur){cur.box=Math.min(4,(cur.box||0)+1);save()}next()});
+$("again").addEventListener("click",function(){if(cur){cur.box=0;save()}next()});
+$("flt").addEventListener("change",function(){cur=null;next()});
+
+/* tabs */
+function tab(m){
+  $("study").classList.toggle("hide",m!=="study");
+  $("manage").classList.toggle("hide",m!=="manage");
+  $("tStudy").classList.toggle("on",m==="study");
+  $("tCards").classList.toggle("on",m==="manage");
+  if(m==="study")next();else renderList();
+}
+$("tStudy").addEventListener("click",function(){tab("study")});
+$("tCards").addEventListener("click",function(){tab("manage")});
+
+/* manage */
+function clearForm(){editing=null;$("fFront").value="";$("fBack").value="";$("fPron").value="";
+  $("formTitle").textContent="Add a card";$("save").textContent="Add card";$("cancel").classList.add("hide");pvFlip=false;renderPreview()}
+$("save").addEventListener("click",function(){
+  var f=$("fFront").value.trim(),b=$("fBack").value.trim();
+  if(!f||!b){msg("m1","Enter both a front and a back.");return}
+  var dp=findDup(f,b,editing,$("fType").value);
+  if(dp.same){msg("m1","Already in your deck: "+dp.same.front+" = "+dp.same.back.replace(/\n/g," ")+". Nothing was added.");return}
+  if(dp.front&&!confirm("“"+f+"” is already in your deck with a different back. Add this card as well?"))return;
+  var d={front:f,back:b,pron:$("fPron").value.trim(),type:$("fType").value};
+  if(editing){var c=cards.filter(function(x){return x.id===editing})[0];if(c){c.front=d.front;c.back=d.back;c.pron=d.pron;c.type=d.type}msg("m1","Card updated.")}
+  else{d.id=uid();d.box=0;cards.push(d);msg("m1","Card added.")}
+  save();clearForm();renderList();
+});
+$("cancel").addEventListener("click",function(){clearForm();msg("m1","")});
+var pvFlip=false;
+function renderPreview(){
+  var f=$("fFront").value.trim(),b=$("fBack").value.trim(),n=$("fPron").value.trim(),box=$("prev"),t=$("fType").value;
+  box.textContent="";
+  if(!f&&!b){box.classList.add("hide");return}
+  box.classList.remove("hide");
+  var c={type:t,front:f||"(front is empty)",back:b||"(back is empty)",pron:n};
+  box.appendChild(el("div","s","Preview: this is how the card will look in your deck. Tap it to flip."));
+  var k=el("div","card");k.tabIndex=0;k.setAttribute("role","button");k.style.minHeight="170px";k.style.marginTop="8px";
+  var hear=el("div","row hide");hear.style.marginTop="8px";var hm=el("div","msg");
+  function paint(){
+    faceInto(k,c,pvFlip);
+    if(pvFlip&&f&&b)soundFor({type:t,front:f,back:b,pron:n},hear,hm);else{hear.textContent="";hm.textContent="";hear.classList.add("hide")}
+  }
+  function toggle(){pvFlip=!pvFlip;paint()}
+  k.addEventListener("click",toggle);
+  k.addEventListener("keydown",function(e){if(e.key===" "||e.key==="Enter"){e.preventDefault();toggle()}});
+  box.appendChild(k);box.appendChild(hear);box.appendChild(hm);
+  paint();
+  if(t==="vocab"&&f&&headword(f)!==f)box.appendChild(el("div","s","Listen will look up: "+headword(f)));
+  if(f&&b){
+    var dp=findDup(f,b,editing,t);
+    if(dp.same)box.appendChild(el("div","w","Already in your deck. It will not be added."));
+    else if(dp.front)box.appendChild(el("div","w","The front is already in your deck with a different back."));
+  }
+}
+["fType","fFront","fBack","fPron"].forEach(function(i){$(i).addEventListener("input",renderPreview);$(i).addEventListener("change",renderPreview)});
+$("bPrev").addEventListener("click",function(){
+  var box=$("bprev"),seen={},nNew=0,nDup=0,nBad=0,rows=[];
+  box.textContent="";
+  $("bulk").value.split(/\r?\n/).forEach(function(line){
+    if(!line.trim())return;
+    var p=line.split(/\t|\|/).map(function(s){return s.trim()});
+    if(p.length<2||!p[0]||!p[1]){nBad++;rows.push(["bad",line.trim()]);return}
+    var k=norm(p[0])+"\u0001"+norm(p[1]);
+    if(seen[k]||findDup(p[0],p[1],null,$("bType").value).same){nDup++;rows.push(["dup",p[0]+" = "+p[1]])}
+    else{seen[k]=1;nNew++;rows.push(["new",p[0]+" = "+p[1]])}
+  });
+  box.classList.remove("hide");
+  if(!rows.length){box.appendChild(el("div","s","Nothing to preview. Paste one card per line first."));return}
+  box.appendChild(el("div","s",nNew+" new, "+nDup+" duplicate (will be skipped)"+(nBad?", "+nBad+" unreadable":"")+"."));
+  rows.slice(0,60).forEach(function(r){
+    var d=el("div",r[0]==="new"?"b":"w",(r[0]==="new"?"New: ":r[0]==="dup"?"Skip, duplicate: ":"Can't read, needs a | between front and back: ")+r[1]);
+    box.appendChild(d);
+  });
+  if(rows.length>60)box.appendChild(el("div","s","Showing the first 60 lines."));
+});
+$("bulk").addEventListener("input",function(){$("bprev").classList.add("hide")});
+$("bAdd").addEventListener("click",function(){
+  var n=0,skipped=[],t=$("bType").value;
+  $("bulk").value.split(/\r?\n/).forEach(function(line){
+    var p=line.split(/\t|\|/).map(function(s){return s.trim()});
+    if(p.length>=2&&p[0]&&p[1]){
+      if(findDup(p[0],p[1],null,t).same){skipped.push(p[0]);return}
+      cards.push({id:uid(),front:p[0],back:p[1],pron:p[2]||"",type:t,box:0});n++;
+    }
+  });
+  if(n){save();renderList()}
+  if(!n&&!skipped.length){msg("m2","No cards found. Use one line per card with | between the parts.");return}
+  $("bulk").value="";
+  msg("m2",n+" added."+(skipped.length?" Skipped "+skipped.length+" already in your deck: "+skipped.slice(0,8).join(", ")+(skipped.length>8?", and more.":"."):""));
+});
+function renderList(){
+  var q=$("q").value.trim().toLowerCase(),box=$("list");box.textContent="";
+  var lf=$("lf").value;
+  var shown=cards.filter(function(c){return (lf==="all"||c.type===lf)&&(!q||(c.front+" "+c.back+" "+c.pron).toLowerCase().indexOf(q)>-1)});
+  $("listTitle").textContent="Your cards ("+cards.length+")";
+  if(!shown.length)box.appendChild(el("p","stat","No matching cards."));
+  shown.forEach(function(c){
+    var r=el("div","item"),d=el("div");
+    d.appendChild(el("b",null,c.front));
+    d.appendChild(el("div",null,c.back));
+    d.appendChild(el("small",null,typeName(c.type)+(c.pron?" · "+c.pron:"")));
+    var a=el("div","row");a.style.flexShrink="0";
+    var e=el("button",null,"Edit"),x=el("button","bad","Delete");
+    e.addEventListener("click",function(){
+      editing=c.id;$("fType").value=c.type;$("fFront").value=c.front;$("fBack").value=c.back;$("fPron").value=c.pron||"";
+      $("formTitle").textContent="Edit card";$("save").textContent="Save changes";$("cancel").classList.remove("hide");
+      pvFlip=false;renderPreview();$("fFront").focus();window.scrollTo(0,0);
+    });
+    x.addEventListener("click",function(){
+      if(confirm("Delete this card?")){cards=cards.filter(function(y){return y.id!==c.id});if(cur&&cur.id===c.id)cur=null;save();renderList()}
+    });
+    a.appendChild(e);a.appendChild(x);r.appendChild(d);r.appendChild(a);box.appendChild(r);
+  });
+}
+$("q").addEventListener("input",renderList);
+$("lf").addEventListener("change",renderList);
+
+/* backup */
+$("exp").addEventListener("click",function(){
+  var b=new Blob([JSON.stringify(cards,null,2)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");
+  a.href=u;a.download="irish-flashcards.json";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(u)},1000);msg("m3","Deck exported.");
+});
+$("impB").addEventListener("click",function(){$("impF").click()});
+$("impF").addEventListener("change",function(){
+  var f=this.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var a=JSON.parse(rd.result);if(!Array.isArray(a))throw 0;
+      var have={};cards.forEach(function(c){have[c.front+"\u0001"+c.back]=1});var n=0;
+      a.forEach(function(c){
+        if(c&&c.front&&c.back&&!have[c.front+"\u0001"+c.back]){
+          cards.push({id:uid(),front:String(c.front),back:String(c.back),pron:String(c.pron||""),type:normType(c.type),box:c.box||0});n++}
+      });
+      save();renderList();msg("m3",n+" new cards imported.");
+    }catch(e){msg("m3","That file is not a deck exported from this page.")}
+    $("impF").value="";
+  };
+  rd.readAsText(f);
+});
+$("rst").addEventListener("click",function(){
+  if(confirm("Replace all cards with the starter deck? Your own cards will be removed.")){cards=SEED.map(mk);cur=null;save();renderList();msg("m3","Starter deck restored.")}
+});
+
+next();
+})();
+</script>
+</body>
+</html>
