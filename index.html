@@ -615,9 +615,11 @@ $("impF").addEventListener("change",function(){
       var a=JSON.parse(rd.result);if(!Array.isArray(a))throw 0;
       var have={};cards.forEach(function(c){have[c.front+"\u0001"+c.back]=1});var n=0;
       a.forEach(function(c){
-        if(c&&c.front&&c.back&&!have[c.front+"\u0001"+c.back]){
-          cards.push({id:uid(),front:String(c.front),back:String(c.back),pron:String(c.pron||""),type:normType(c.type),box:c.box||0});n++}
-      });
+  if(!(c&&c.front&&c.back))return;
+  var k=c.front+"\u0001"+c.back,m=cards.filter(function(x){return x.front+"\u0001"+x.back===k})[0];
+  if(m){if((c.box||0)>(m.box||0)){m.box=c.box;n++}}
+  else{cards.push({id:uid(),front:String(c.front),back:String(c.back),pron:String(c.pron||""),type:normType(c.type),box:c.box||0});n++}
+});
       save();renderList();msg("m3",n+" new cards imported.");
     }catch(e){msg("m3","That file is not a deck exported from this page.")}
     $("impF").value="";
