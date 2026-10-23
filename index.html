@@ -405,7 +405,7 @@ function next(){
   var p=pool();
   if(!p.length){cur=null;draw();return}
   var cand=p.length>1?p.filter(function(c){return !cur||c.id!==cur.id}):p;
-  var tot=0,w=cand.map(function(c){var x=(N+1)-(c.box||0);tot+=x;return x});
+  var tot=0,w=cand.map(function(c){var x=(MAX+1)-Math.min(MAX,(c.box||0));tot+=x;return x});
   var r=Math.random()*tot,i=0;
   while(i<cand.length-1&&r>=w[i]){r-=w[i];i++}
   cur=cand[i];flipped=false;draw();
